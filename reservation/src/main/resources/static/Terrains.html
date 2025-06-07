@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Football Terrains</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+    <div class="container">
+      <a class="navbar-brand" href="#">⚽ Terrain Reservation</a>
+      <div class="navbar-nav ms-auto">
+        <a class="nav-link" href="register.html">Register</a>
+        <a class="nav-link" href="login.html">Login</a>
+        <a class="nav-link" href="terrains.html">Terrains</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container mt-4">
+    <div class="row">
+      <div class="col-md-8">
+        <h2>Available Football Terrains</h2>
+        
+        <!-- Search Form -->
+        <div class="card mb-4">
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <input type="text" class="form-control" id="searchName" placeholder="Search by terrain name...">
+              </div>
+              <div class="col-md-4">
+                <select class="form-select" id="filterType">
+                  <option value="">All Types</option>
+                  <option value="Football">Football</option>
+                  <option value="Tennis">Tennis</option>
+                  <option value="Basketball">Basketball</option>
+                </select>
+              </div>
+              <div class="col-md-2">
+                <button class="btn btn-primary w-100" onclick="searchTerrains()">Search</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Terrains List -->
+        <div id="terrainsList">
+          <div class="text-center">
+            <div class="spinner-border" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <!-- Add New Terrain Form -->
+        <div class="card">
+          <div class="card-header">
+            <h5>Add New Terrain</h5>
+          </div>
+          <div class="card-body">
+            <form id="addTerrainForm">
+              <div class="mb-3">
+                <label class="form-label">Terrain Name</label>
+                <input type="text" class="form-control" id="terrainNom" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Type</label>
+                <select class="form-select" id="terrainType" required>
+                  <option value="">Select Type</option>
+                  <option value="Football">Football</option>
+                  <option value="Tennis">Tennis</option>
+                  <option value="Basketball">Basketball</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Capacity</label>
+                <input type="number" class="form-control" id="terrainCapacite" min="1" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Complexe</label>
+                <select class="form-select" id="terrainComplexe">
+                  <option value="">Select Complexe</option>
+                </select>
+              </div>
+              <button type="submit" class="btn btn-success w-100">Add Terrain</button>
+            </form>
+            <div id="addResult" class="mt-3"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let allTerrains = [];
+    let complexes = [];
+
+    // Load data when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      loadTerrains();
+      loadComplexes();
+    });
+
+    // Load all terrains
+    function loadTerrains() {
+      fetch('/api/terrains')
+        .then(res => res.json())
+        .then(data => {
+          allTerrains = data;
+          displayTerrains(data);
+        })
+        .catch(err => {
+          document.getElementById('terrainsList').innerHTML = 
+            '<div class="alert alert-danger">Error loading terrains</div>';
+        });
+    }
+
+    // Load complexes for dropdown
+    function loadComplexes() {
+      fetch('/api/complexes')
+        .then(res => res.json())
+        .then(data => {
+          complexes = data;
+          const select = document.getElementById('terrainComplexe');
+          data.forEach(complexe => {
+            const option = document.createElement('option');
+            option.value = complexe.id;
+            option.textContent = complexe.nom;
+            select.appendChild(option);
+          });
+        });
+    }
+
+    // Display terrains as cards
+    function displayTerrains(terrains) {
+      const container = document.getElementById('terrainsList');
+      
+      if (terrains.length === 0) {
+        container.innerHTML = '<div class="alert alert-info">No terrains found</div>';
+        return;
+      }
+      
+      container.innerHTML = terrains.map(terrain => `
+        <div class="card mb-3">
+          <div class="card-body">
+            <div class="row align-items-center">
+              <div class="col-md-8">
+                <h5 class="card-title">${terrain.nom}</h5>
+                <p class="card-text">
+                  <span class="badge bg-primary">${terrain.type}</span>
+                  <span class="badge bg-info">Capacity: ${terrain.capacite}</span>
+                  ${terrain.complexe ? `<span class="badge bg-secondary">${terrain.complexe.nom}</span>` : ''}
+                </p>
+                ${terrain.complexe ? `<small class="text-muted">📍 ${terrain.complexe.adresse}</small>` : ''}
+              </div>
+              <div class="col-md-4 text-end">
+                <button class="btn btn-success btn-sm" onclick="makeReservation(${terrain.id})">
+                  Book Now
+                </button>
+                <button class="btn btn-outline-danger btn-sm ms-1" onclick="deleteTerrain(${terrain.id})">
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Search terrains
+    function searchTerrains() {
+      const searchName = document.getElementById('searchName').value.toLowerCase();
+      const filterType = document.getElementById('filterType').value;
+      
+      let filtered = allTerrains.filter(terrain => {
+        const matchesName = !searchName || terrain.nom.toLowerCase().includes(searchName);
+        const matchesType = !filterType || terrain.type === filterType;
+        return matchesName && matchesType;
+      });
+      
+      displayTerrains(filtered);
+    }
+
+    // Add new terrain
+    document.getElementById('addTerrainForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const terrainData = {
+        nom: document.getElementById('terrainNom').value,
+        type: document.getElementById('terrainType').value,
+        capacite: parseInt(document.getElementById('terrainCapacite').value),
+        complexe: {
+          id: document.getElementById('terrainComplexe').value || null
+        }
+      };
+
+      fetch('/api/terrains', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(terrainData)
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('addResult').innerHTML = 
+          '<div class="alert alert-success">Terrain added successfully!</div>';
+        document.getElementById('addTerrainForm').reset();
+        loadTerrains(); // Reload the list
+      })
+      .catch(err => {
+        document.getElementById('addResult').innerHTML = 
+          '<div class="alert alert-danger">Error adding terrain</div>';
+      });
+    });
+
+    // Delete terrain
+    function deleteTerrain(id) {
+      if (confirm('Are you sure you want to delete this terrain?')) {
+        fetch(`/api/terrains/${id}`, { method: 'DELETE' })
+          .then(() => {
+            loadTerrains(); // Reload the list
+          })
+          .catch(err => alert('Error deleting terrain'));
+      }
+    }
+
+    // Placeholder for reservation (we'll build this next)
+    function makeReservation(terrainId) {
+      alert(`Reservation feature coming next! Terrain ID: ${terrainId}`);
+      // We'll implement this when we build the Reservation module
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Réservation Terrain</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .slot {
+      margin: 5px;
+      width: 100px;
+    }
+    .reserved {
+      background-color: #dc3545 !important; /* red */
+      color: white;
+    }
+    .available {
+      background-color: #28a745 !important; /* green */
+      color: white;
+    }
+  </style>
+</head>
+<body class="p-4">
+  <div class="container">
+    <h2>Réservation de terrain</h2>
+    <div id="terrainInfo" class="mb-4"></div>
+
+    <div class="row mb-3">
+      <div class="col-md-3">
+        <label for="reservationDate" class="form-label">Date</label>
+        <input type="date" class="form-control" id="reservationDate">
+      </div>
+      <div class="col-md-3">
+        <label for="duration" class="form-label">Durée (heures)</label>
+        <select id="duration" class="form-select">
+          <option value="1">1h</option>
+          <option value="2">2h</option>
+          <option value="3">3h</option>
+        </select>
+      </div>
+      <div class="col-md-3 d-flex align-items-end">
+        <button class="btn btn-primary" onclick="loadSlots()">Charger les créneaux</button>
+      </div>
+    </div>
+
+    <div id="slots" class="d-flex flex-wrap mb-5"></div>
+
+    <h4>Mes Réservations</h4>
+    <ul id="userReservations" class="list-group"></ul>
+  </div>
+
+  <script>
+    const terrainId = new URLSearchParams(window.location.search).get("terrainId");
+    const userId = localStorage.getItem("userId"); // Must be set after login
+
+    if (!terrainId || !userId) {
+      alert("Utilisateur ou terrain non défini.");
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      fetch(`/api/terrains/${terrainId}`)
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById("terrainInfo").innerHTML = `
+            <h4>${data.nom}</h4>
+            <p>Type: ${data.type} | Capacité: ${data.capacite} personnes</p>
+          `;
+        });
+
+      loadUserReservations();
+    });
+
+    function loadUserReservations() {
+      fetch(`/api/reservations/user/${userId}`)
+        .then(res => res.json())
+        .then(data => {
+          const list = document.getElementById("userReservations");
+          list.innerHTML = '';
+          data.filter(r => r.terrain.id == terrainId).forEach(r => {
+            const item = document.createElement("li");
+            item.className = "list-group-item";
+            item.textContent = `${r.date} de ${r.heureDebut} à ${r.heureFin} (${r.status})`;
+            list.appendChild(item);
+          });
+        });
+    }
+
+    function loadSlots() {
+      const date = document.getElementById("reservationDate").value;
+      const duration = parseInt(document.getElementById("duration").value);
+      const container = document.getElementById("slots");
+
+      if (!date) return alert("Veuillez choisir une date.");
+
+      container.innerHTML = '';
+
+      const startHour = 8;
+      const endHour = 22 - duration + 1;
+
+      for (let hour = startHour; hour <= endHour; hour++) {
+        const slotStart = `${hour.toString().padStart(2, '0')}:00`;
+        const slotEnd = `${(hour + duration).toString().padStart(2, '0')}:00`;
+
+        // Check availability
+        fetch(`/api/reservations/check-availability?terrainId=${terrainId}&date=${date}&heureDebut=${slotStart}&heureFin=${slotEnd}`)
+          .then(res => res.json())
+          .then(data => {
+            const btn = document.createElement("button");
+            btn.className = `btn slot ${data.available ? 'available' : 'reserved'}`;
+            btn.textContent = `${slotStart} - ${slotEnd}`;
+            btn.disabled = !data.available;
+
+            if (data.available) {
+              btn.onclick = () => makeReservation(date, slotStart, slotEnd);
+            }
+
+            container.appendChild(btn);
+          });
+      }
+    }
+
+    function makeReservation(date, heureDebut, heureFin) {
+      fetch('/api/reservations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          terrainId, utilisateurId: userId, date, heureDebut, heureFin
+        })
+      })
+      .then(res => {
+        if (res.ok) return res.json();
+        else return res.text().then(text => { throw new Error(text); });
+      })
+      .then(data => {
+        alert("Réservation créée !");
+        loadSlots();
+        loadUserReservations();
+      })
+      .catch(err => alert("Erreur: " + err.message));
+    }
+  </script>
+</body>
+</html>
