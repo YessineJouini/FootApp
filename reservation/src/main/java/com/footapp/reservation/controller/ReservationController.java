@@ -2,6 +2,8 @@ package com.footapp.reservation.controller;
 
 import com.footapp.reservation.model.*;
 import com.footapp.reservation.repository.*;
+
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
@@ -39,6 +41,18 @@ public class ReservationController {
     }
 
     // Check availability for a terrain on specific date/time
+    @GetMapping("/user/me")
+    public ResponseEntity<?> getMyReservations(HttpSession session) {
+        Utilisateur user = (Utilisateur) session.getAttribute("user");
+
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not logged in");
+        }
+
+        List<Reservation> reservations = reservationRepo.findByUtilisateurId(user.getId());
+        return ResponseEntity.ok(reservations);
+    }
+
     @GetMapping("/check-availability")
     public ResponseEntity<Map<String, Object>> checkAvailability(
             @RequestParam Long terrainId,

@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Terrain & Complex Management</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .sidebar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .nav-link {
+            color: rgba(255, 255, 255, 0.8) !important;
+            transition: all 0.3s ease;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: white !important;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+        .card {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: none;
+            transition: transform 0.2s ease;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+            transform: translateY(-1px);
+        }
+        .table th {
+            background-color: #f8f9fa;
+            border-top: none;
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .badge-status {
+            font-size: 0.8em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 sidebar p-3">
+                <div class="text-center text-white mb-4">
+                    <i class="fas fa-futbol fa-2x mb-2"></i>
+                    <h4>Admin Panel</h4>
+                </div>
+                <nav class="nav flex-column">
+                    <a class="nav-link active" href="#" onclick="showSection('dashboard')">
+                        <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                    </a>
+                    <a class="nav-link" href="#" onclick="showSection('complexes')">
+                        <i class="fas fa-building me-2"></i> Complexes
+                    </a>
+                    <a class="nav-link" href="#" onclick="showSection('terrains')">
+                        <i class="fas fa-map me-2"></i> Terrains
+                    </a>
+                </nav>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10 p-4">
+                <!-- Dashboard Section -->
+                <div id="dashboard" class="content-section active">
+                    <h2 class="mb-4">
+                        <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                    </h2>
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h4 id="complexCount">0</h4>
+                                            <p class="mb-0">Total Complexes</p>
+                                        </div>
+                                        <i class="fas fa-building fa-2x opacity-75"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="card bg-success text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h4 id="terrainCount">0</h4>
+                                            <p class="mb-0">Total Terrains</p>
+                                        </div>
+                                        <i class="fas fa-map fa-2x opacity-75"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Complexes Section -->
+                <div id="complexes" class="content-section">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2><i class="fas fa-building me-2"></i>Complex Management</h2>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#complexModal" onclick="openComplexModal('create')">
+                            <i class="fas fa-plus me-2"></i>Add Complex
+                        </button>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Name</th>
+                                            <th>Address</th>
+                                            <th>Terrains</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="complexesTableBody">
+                                        <!-- Dynamic content -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Terrains Section -->
+                <div id="terrains" class="content-section">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2><i class="fas fa-map me-2"></i>Terrain Management</h2>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#terrainModal" onclick="openTerrainModal('create')">
+                            <i class="fas fa-plus me-2"></i>Add Terrain
+                        </button>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Name</th>
+                                            <th>Type</th>
+                                            <th>Capacity</th>
+                                            <th>Complex</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="terrainsTableBody">
+                                        <!-- Dynamic content -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Complex Modal -->
+    <div class="modal fade" id="complexModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="complexModalTitle">Add Complex</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="complexForm">
+                        <input type="hidden" id="complexId">
+                        <div class="mb-3">
+                            <label for="complexNom" class="form-label">Name *</label>
+                            <input type="text" class="form-control" id="complexNom" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="complexAdresse" class="form-label">Address *</label>
+                            <textarea class="form-control" id="complexAdresse" rows="3" required></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveComplex()">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Terrain Modal -->
+    <div class="modal fade" id="terrainModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="terrainModalTitle">Add Terrain</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="terrainForm">
+                        <input type="hidden" id="terrainId">
+                        <div class="mb-3">
+                            <label for="terrainNom" class="form-label">Name *</label>
+                            <input type="text" class="form-control" id="terrainNom" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="terrainType" class="form-label">Type *</label>
+                            <select class="form-select" id="terrainType" required>
+                                <option value="">Select Type</option>
+                                <option value="Football">Football</option>
+                                <option value="Basketball">Basketball</option>
+                                <option value="Tennis">Tennis</option>
+                                <option value="Volleyball">Volleyball</option>
+                                <option value="Handball">Handball</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="terrainCapacite" class="form-label">Capacity *</label>
+                            <input type="number" class="form-control" id="terrainCapacite" min="1" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="terrainComplexe" class="form-label">Complex</label>
+                            <select class="form-select" id="terrainComplexe">
+                                <option value="">Select Complex</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveTerrain()">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Delete</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete this item? This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const API_BASE = '/admin';
+        let complexes = [];
+        let terrains = [];
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            loadComplexes();
+            loadTerrains();
+        });
+
+        // Navigation
+        function showSection(section) {
+            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+            document.getElementById(section).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Complex Management
+        async function loadComplexes() {
+            try {
+                const response = await fetch(`${API_BASE}/complexes`);
+                if (response.ok) {
+                    complexes = await response.json();
+                    renderComplexes();
+                    updateDashboard();
+                    populateComplexSelect();
+                }
+            } catch (error) {
+                console.error('Error loading complexes:', error);
+                showAlert('Error loading complexes', 'danger');
+            }
+        }
+
+        function renderComplexes() {
+            const tbody = document.getElementById('complexesTableBody');
+            tbody.innerHTML = complexes.map(complex => `
+                <tr>
+                    <td>${complex.id}</td>
+                    <td><strong>${complex.nom}</strong></td>
+                    <td>${complex.adresse}</td>
+                    <td><span class="badge bg-info">${getTerrainCountForComplex(complex.id)} terrains</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="openComplexModal('edit', ${complex.id})" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteComplex(${complex.id})" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function openComplexModal(mode, id = null) {
+            const modal = document.getElementById('complexModal');
+            const title = document.getElementById('complexModalTitle');
+            const form = document.getElementById('complexForm');
+            
+            form.reset();
+            
+            if (mode === 'create') {
+                title.textContent = 'Add Complex';
+                document.getElementById('complexId').value = '';
+            } else {
+                title.textContent = 'Edit Complex';
+                const complex = complexes.find(c => c.id === id);
+                if (complex) {
+                    document.getElementById('complexId').value = complex.id;
+                    document.getElementById('complexNom').value = complex.nom;
+                    document.getElementById('complexAdresse').value = complex.adresse;
+                }
+            }
+        }
+
+        async function saveComplex() {
+            const id = document.getElementById('complexId').value;
+            const nom = document.getElementById('complexNom').value;
+            const adresse = document.getElementById('complexAdresse').value;
+
+            if (!nom || !adresse) {
+                showAlert('Please fill in all required fields', 'warning');
+                return;
+            }
+
+            const complexData = { nom, adresse };
+
+            try {
+                let response;
+                if (id) {
+                    response = await fetch(`${API_BASE}/complexes/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(complexData)
+                    });
+                } else {
+                    response = await fetch(`${API_BASE}/complexes`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(complexData)
+                    });
+                }
+
+                if (response.ok) {
+                    bootstrap.Modal.getInstance(document.getElementById('complexModal')).hide();
+                    loadComplexes();
+                    showAlert(id ? 'Complex updated successfully' : 'Complex created successfully', 'success');
+                } else {
+                    showAlert('Error saving complex', 'danger');
+                }
+            } catch (error) {
+                console.error('Error saving complex:', error);
+                showAlert('Error saving complex', 'danger');
+            }
+        }
+
+        function deleteComplex(id) {
+            const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            document.getElementById('confirmDeleteBtn').onclick = async () => {
+                try {
+                    const response = await fetch(`${API_BASE}/complexes/${id}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (response.ok) {
+                        loadComplexes();
+                        loadTerrains(); // Refresh terrains as they might be affected
+                        showAlert('Complex deleted successfully', 'success');
+                    } else {
+                        showAlert('Error deleting complex', 'danger');
+                    }
+                } catch (error) {
+                    console.error('Error deleting complex:', error);
+                    showAlert('Error deleting complex', 'danger');
+                }
+                deleteModal.hide();
+            };
+            deleteModal.show();
+        }
+
+        // Terrain Management
+        async function loadTerrains() {
+            try {
+                const response = await fetch(`${API_BASE}/terrains`);
+                if (response.ok) {
+                    terrains = await response.json();
+                    renderTerrains();
+                    updateDashboard();
+                } else {
+                    // If endpoint doesn't exist, we'll work with empty array
+                    terrains = [];
+                    renderTerrains();
+                }
+            } catch (error) {
+                console.error('Error loading terrains:', error);
+                terrains = [];
+                renderTerrains();
+            }
+        }
+
+        function renderTerrains() {
+            const tbody = document.getElementById('terrainsTableBody');
+            tbody.innerHTML = terrains.map(terrain => `
+                <tr>
+                    <td>${terrain.id}</td>
+                    <td><strong>${terrain.nom}</strong></td>
+                    <td><span class="badge bg-secondary">${terrain.type}</span></td>
+                    <td>${terrain.capacite}</td>
+                    <td>${terrain.complexe ? terrain.complexe.nom : '<span class="text-muted">No complex</span>'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="openTerrainModal('edit', ${terrain.id})" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteTerrain(${terrain.id})" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function openTerrainModal(mode, id = null) {
+            const modal = document.getElementById('terrainModal');
+            const title = document.getElementById('terrainModalTitle');
+            const form = document.getElementById('terrainForm');
+            
+            form.reset();
+            populateComplexSelect();
+            
+            if (mode === 'create') {
+                title.textContent = 'Add Terrain';
+                document.getElementById('terrainId').value = '';
+            } else {
+                title.textContent = 'Edit Terrain';
+                const terrain = terrains.find(t => t.id === id);
+                if (terrain) {
+                    document.getElementById('terrainId').value = terrain.id;
+                    document.getElementById('terrainNom').value = terrain.nom;
+                    document.getElementById('terrainType').value = terrain.type;
+                    document.getElementById('terrainCapacite').value = terrain.capacite;
+                    document.getElementById('terrainComplexe').value = terrain.complexe ? terrain.complexe.id : '';
+                }
+            }
+        }
+
+        async function saveTerrain() {
+            const id = document.getElementById('terrainId').value;
+            const nom = document.getElementById('terrainNom').value;
+            const type = document.getElementById('terrainType').value;
+            const capacite = parseInt(document.getElementById('terrainCapacite').value);
+            const complexeId = document.getElementById('terrainComplexe').value;
+
+            if (!nom || !type || !capacite) {
+                showAlert('Please fill in all required fields', 'warning');
+                return;
+            }
+
+            const terrainData = { 
+                nom, 
+                type, 
+                capacite,
+                complexe: complexeId ? { id: parseInt(complexeId) } : null
+            };
+
+            try {
+                let response;
+                if (id) {
+                    response = await fetch(`${API_BASE}/terrains/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(terrainData)
+                    });
+                } else {
+                    response = await fetch(`${API_BASE}/terrains`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(terrainData)
+                    });
+                }
+
+                if (response.ok) {
+                    bootstrap.Modal.getInstance(document.getElementById('terrainModal')).hide();
+                    loadTerrains();
+                    showAlert(id ? 'Terrain updated successfully' : 'Terrain created successfully', 'success');
+                } else {
+                    showAlert('Error saving terrain', 'danger');
+                }
+            } catch (error) {
+                console.error('Error saving terrain:', error);
+                showAlert('Error saving terrain', 'danger');
+            }
+        }
+
+        function deleteTerrain(id) {
+            const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            document.getElementById('confirmDeleteBtn').onclick = async () => {
+                try {
+                    const response = await fetch(`${API_BASE}/terrains/${id}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (response.ok) {
+                        loadTerrains();
+                        showAlert('Terrain deleted successfully', 'success');
+                    } else {
+                        showAlert('Error deleting terrain', 'danger');
+                    }
+                } catch (error) {
+                    console.error('Error deleting terrain:', error);
+                    showAlert('Error deleting terrain', 'danger');
+                }
+                deleteModal.hide();
+            };
+            deleteModal.show();
+        }
+
+        // Utility Functions
+        function populateComplexSelect() {
+            const select = document.getElementById('terrainComplexe');
+            select.innerHTML = '<option value="">Select Complex</option>' +
+                complexes.map(complex => `<option value="${complex.id}">${complex.nom}</option>`).join('');
+        }
+
+        function getTerrainCountForComplex(complexId) {
+            return terrains.filter(terrain => terrain.complexe && terrain.complexe.id === complexId).length;
+        }
+
+        function updateDashboard() {
+            document.getElementById('complexCount').textContent = complexes.length;
+            document.getElementById('terrainCount').textContent = terrains.length;
+        }
+
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

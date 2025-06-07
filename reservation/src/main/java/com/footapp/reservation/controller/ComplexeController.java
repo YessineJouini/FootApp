@@ -29,32 +29,5 @@ public class ComplexeController {
             .orElse(ResponseEntity.notFound().build());
     }
 
-    // POST create new complexe
-    @PostMapping
-    public ResponseEntity<Complexe> createComplexe(@RequestBody Complexe complexe) {
-        return ResponseEntity.ok(complexeRepo.save(complexe));
-    }
-
-    // PUT update complexe
-    @PutMapping("/{id}")
-    public ResponseEntity<Complexe> updateComplexe(@PathVariable Long id, @RequestBody Complexe updatedComplexe) {
-        return complexeRepo.findById(id)
-            .map(complexe -> {
-                complexe.setNom(updatedComplexe.getNom());
-                complexe.setAdresse(updatedComplexe.getAdresse());
-                return ResponseEntity.ok(complexeRepo.save(complexe));
-            })
-            .orElse(ResponseEntity.notFound().build());
-    }
-
-    // DELETE complexe
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteComplexe(@PathVariable Long id) {
-        return complexeRepo.findById(id)
-            .map(complexe -> {
-                complexeRepo.delete(complexe);
-                return ResponseEntity.ok().build();
-            })
-            .orElse(ResponseEntity.notFound().build());
-    }
+  
 }

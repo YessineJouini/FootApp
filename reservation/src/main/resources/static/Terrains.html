@@ -58,43 +58,7 @@
 
       <div class="col-md-4">
         <!-- Add New Terrain Form -->
-        <div class="card">
-          <div class="card-header">
-            <h5>Add New Terrain</h5>
-          </div>
-          <div class="card-body">
-            <form id="addTerrainForm">
-              <div class="mb-3">
-                <label class="form-label">Terrain Name</label>
-                <input type="text" class="form-control" id="terrainNom" required>
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Type</label>
-                <select class="form-select" id="terrainType" required>
-                  <option value="">Select Type</option>
-                  <option value="Football">Football</option>
-                  <option value="Tennis">Tennis</option>
-                  <option value="Basketball">Basketball</option>
-                </select>
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Capacity</label>
-                <input type="number" class="form-control" id="terrainCapacite" min="1" required>
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Complexe</label>
-                <select class="form-select" id="terrainComplexe">
-                  <option value="">Select Complexe</option>
-                </select>
-              </div>
-              <button type="submit" class="btn btn-success w-100">Add Terrain</button>
-            </form>
-            <div id="addResult" class="mt-3"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+        
 
   <script>
     let allTerrains = [];
@@ -229,10 +193,10 @@
     }
 
     // Placeholder for reservation (we'll build this next)
-    function makeReservation(terrainId) {
-      alert(`Reservation feature coming next! Terrain ID: ${terrainId}`);
-      // We'll implement this when we build the Reservation module
-    }
+	function makeReservation(terrainId) {
+	  window.location.href = `reservations.html?terrainId=${terrainId}`;
+	}
+
   </script>
 </body>
 </html>
